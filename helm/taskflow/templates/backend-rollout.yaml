@@ -7,6 +7,8 @@ kind: Rollout
 metadata:
   name: taskflow-backend
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
   labels:
     {{- include "taskflow.backend.selectorLabels" . | nindent 4 }}
     {{- include "taskflow.labels" . | nindent 4 }}
