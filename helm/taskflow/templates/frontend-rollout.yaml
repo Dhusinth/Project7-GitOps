@@ -5,6 +5,8 @@ kind: Rollout
 metadata:
   name: taskflow-frontend
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
   labels:
     {{- include "taskflow.frontend.selectorLabels" . | nindent 4 }}
     {{- include "taskflow.labels" . | nindent 4 }}

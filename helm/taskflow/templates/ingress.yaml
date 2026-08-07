@@ -14,6 +14,7 @@ metadata:
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
     alb.ingress.kubernetes.io/group.name: taskflow
     alb.ingress.kubernetes.io/group.order: "20"
+    argocd.argoproj.io/sync-wave: "50"
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
