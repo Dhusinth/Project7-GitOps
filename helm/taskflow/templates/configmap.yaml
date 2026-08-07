@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: taskflow-backend-config
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
   labels:
     {{- include "taskflow.backend.selectorLabels" . | nindent 4 }}
 data:

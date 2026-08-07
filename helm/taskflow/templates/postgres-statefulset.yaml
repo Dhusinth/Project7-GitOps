@@ -4,6 +4,8 @@ kind: StatefulSet
 metadata:
   name: taskflow-postgres
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
   labels:
     {{- include "taskflow.postgres.selectorLabels" . | nindent 4 }}
 spec:

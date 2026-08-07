@@ -7,11 +7,7 @@ metadata:
   labels:
     {{- include "taskflow.backend.selectorLabels" . | nindent 4 }}
   annotations:
-    # Runs before each install/upgrade so the schema is always current
-    # before the new backend pods start receiving traffic.
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "0"
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    argocd.argoproj.io/sync-wave: "20"
 spec:
   backoffLimit: 2
   template:
