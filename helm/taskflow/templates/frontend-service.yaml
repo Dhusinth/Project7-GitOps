@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: taskflow-frontend
   namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "45"
   labels:
     {{- include "taskflow.frontend.selectorLabels" . | nindent 4 }}
 spec:
