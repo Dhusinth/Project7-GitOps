@@ -32,14 +32,9 @@ spec:
           operator: In
           values:
             - t3.small
-            - t3.medium
-            - t3.large
-            - t3a.small
-            - t3a.medium
-            - t3a.large
 
   limits:
-    cpu: "10"
+    cpu: "4"
 
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
