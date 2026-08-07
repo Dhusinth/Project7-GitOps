@@ -13,7 +13,7 @@ backend:
   # "deployed to prod" that the Jenkinsfile alone doesn't cross.
   image:
     repository: dhusinth123/taskflow-backend
-    tag: "1.0.0"
+    tag: 8167751
   replicaCount: 3
   rolloutStrategy: canary
   env:
