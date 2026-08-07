@@ -7,6 +7,9 @@ metadata:
 spec:
   amiFamily: AL2023
 
+  amiSelectorTerms:
+    - alias: al2023@latest
+
   role: project7-eks-node-group-role
 
   subnetSelectorTerms:
