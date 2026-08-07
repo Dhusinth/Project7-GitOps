@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps
+  namespace: argocd
+  # Finalizers ensure that deleting the app resource also cleans up cluster resources
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  # The project the application belongs to
+  project: default
+
+  # Source: Where the target manifests are stored
+  source:
+    repoURL: 'https://github.com/Dhusinth/Project7-GitOps.git'
+    targetRevision: HEAD # Can be a branch, tag, or commit SHA
+    path: applications # Path containing manifests inside the repo
+
+  # Destination: Where to deploy the manifests
+  destination:
+    server: 'https://kubernetes.default.svc' # Targets the local cluster
+    namespace: argocd
+
+  # Sync Policy: Configures how shifts in Git track to the cluster
+  syncPolicy:
+    automated:
+      prune: true      # Automatically removes resources deleted from Git
+      selfHeal: true   # Automatically overwrites drift created directly in the cluster
+    syncOptions:
+      - CreateNamespace=true # Creates target namespace if it does not exist
+      - ServerSideApply=true 

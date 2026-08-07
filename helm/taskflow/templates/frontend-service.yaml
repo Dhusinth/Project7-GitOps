@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskflow-frontend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "taskflow.frontend.selectorLabels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "taskflow.frontend.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.frontend.service.port }}
+      targetPort: {{ .Values.frontend.service.targetPort }}
+---
+# Extra Services required by the Argo Rollout canary/blueGreen strategies.
+# The rollout controller manages which pods these select at runtime.
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskflow-frontend-canary
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "taskflow.frontend.selectorLabels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "taskflow.frontend.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.frontend.service.port }}
+      targetPort: {{ .Values.frontend.service.targetPort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: taskflow-frontend-preview
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "taskflow.frontend.selectorLabels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "taskflow.frontend.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.frontend.service.port }}
+      targetPort: {{ .Values.frontend.service.targetPort }}
+---
+{{- if .Values.frontend.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: taskflow-frontend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "taskflow.frontend.selectorLabels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: argoproj.io/v1alpha1
+    kind: Rollout
+    name: taskflow-frontend
+  minReplicas: {{ .Values.frontend.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.frontend.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.frontend.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}

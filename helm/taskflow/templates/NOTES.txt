@@ -1,0 +1,31 @@
+TaskFlow has been deployed to namespace "{{ .Values.global.namespace }}".
+
+Workloads (both are Argo Rollouts, not plain Deployments):
+  - taskflow-frontend  ({{ .Values.frontend.replicaCount }} replicas, HPA: {{ .Values.frontend.autoscaling.enabled }}, strategy: {{ .Values.frontend.rolloutStrategy }})
+  - taskflow-backend   ({{ .Values.backend.replicaCount }} replicas, HPA: {{ .Values.backend.autoscaling.enabled }}, strategy: {{ .Values.backend.rolloutStrategy }})
+  - taskflow-postgres  (StatefulSet, enabled: {{ .Values.postgres.enabled }})
+  - taskflow-redis     (StatefulSet, enabled: {{ .Values.redis.enabled }})
+
+{{- if .Values.ingress.enabled }}
+{{- if .Values.ingress.host }}
+
+Access the app at:
+  http://{{ .Values.ingress.host }}
+{{- else }}
+
+No ingress host is set (no owned domain for this environment). Find the
+ALB's AWS-generated DNS name and hit that directly:
+  kubectl get ingress -n {{ .Values.global.namespace }} taskflow-frontend-ingress -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'
+{{- end }}
+{{- else }}
+
+Ingress is disabled. Port-forward to reach the app locally:
+  kubectl -n {{ .Values.global.namespace }} port-forward svc/taskflow-frontend 8080:{{ .Values.frontend.service.port }}
+{{- end }}
+
+Watch a rollout in progress:
+  kubectl argo rollouts get rollout taskflow-backend -n {{ .Values.global.namespace }} --watch
+  kubectl argo rollouts get rollout taskflow-frontend -n {{ .Values.global.namespace }} --watch
+
+Demo login (seeded by the migration Job, if migrationJob.seedDemoData=true):
+  demo@taskflow.dev / demo12345

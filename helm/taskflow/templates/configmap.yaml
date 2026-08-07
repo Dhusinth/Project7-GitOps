@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskflow-backend-config
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "taskflow.backend.selectorLabels" . | nindent 4 }}
+data:
+  APP_ENV: {{ .Values.backend.env.APP_ENV | quote }}
+  LOG_LEVEL: {{ .Values.backend.env.LOG_LEVEL | quote }}
+  CORS_ORIGINS: {{ .Values.backend.env.CORS_ORIGINS | quote }}
+  POSTGRES_HOST: "taskflow-postgres"
+  POSTGRES_DB: {{ .Values.postgres.auth.database | quote }}
+  POSTGRES_USER: {{ .Values.postgres.auth.username | quote }}
+  REDIS_URL: "redis://taskflow-redis:6379/0"

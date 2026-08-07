@@ -1,0 +1,66 @@
+# Uses the AWS Load Balancer Controller (installed via Terraform, not this
+# repo). Both Ingresses below share one ALB via the group.name annotation
+# instead of provisioning two. HTTP only — no ACM cert / TLS for this demo
+# project (see values.yaml ingress.annotations for the HTTP-only listener).
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: taskflow-frontend-ingress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "taskflow.frontend.selectorLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    alb.ingress.kubernetes.io/group.name: taskflow
+    alb.ingress.kubernetes.io/group.order: "20"
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - {{- if .Values.ingress.host }}
+      host: {{ .Values.ingress.host }}
+      {{- end }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: taskflow-frontend
+                port:
+                  number: {{ .Values.frontend.service.port }}
+---
+# Dedicated Ingress for the backend API, ordered ahead of the frontend
+# Ingress in the shared ALB's listener rules (group.order: "10" < "20") so
+# /api/* is matched before the frontend's catch-all /. When the canary
+# strategy is selected (backend.rolloutStrategy), the Argo Rollouts ALB
+# traffic router manages this Ingress's weighted target-group actions
+# automatically — this resource is the ingress referenced in
+# backend-rollout.yaml's trafficRouting.alb.ingress.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: taskflow-backend-ingress
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "taskflow.backend.selectorLabels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+    alb.ingress.kubernetes.io/group.name: taskflow
+    alb.ingress.kubernetes.io/group.order: "10"
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+    - {{- if .Values.ingress.host }}
+      host: {{ .Values.ingress.host }}
+      {{- end }}
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: taskflow-backend
+                port:
+                  number: {{ .Values.backend.service.port }}
+{{- end }}

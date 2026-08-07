@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+
+metadata:
+  name: taskflow
+  namespace: argocd
+
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: dev
+            valuesFile: values-dev.yaml
+
+          - env: prod
+            namespace: prod
+            valuesFile: values-prod.yaml
+
+  template:
+    metadata:
+      name: taskflow-{{namespace}}
+
+    spec:
+      project: default
+
+      source:
+        repoURL: https://github.com/Dhusinth/Project7-GitOps.git
+        targetRevision: HEAD
+        path: helm/taskflow
+
+        helm:
+          valueFiles:
+            - "{{valuesFile}}"
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{namespace}}"
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true

@@ -1,0 +1,59 @@
+# Requires the Argo Rollouts controller (argoproj.io/v1alpha1) installed
+# in-cluster (it's part of every environment via applications/argo-rollouts.yaml,
+# so this is the only workload path — no plain Deployment fallback).
+# Pick the strategy with `backend.rolloutStrategy: canary|blueGreen`.
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: taskflow-backend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "taskflow.backend.selectorLabels" . | nindent 4 }}
+    {{- include "taskflow.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "taskflow.backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "taskflow.backend.selectorLabels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "{{ .Values.backend.service.targetPort }}"
+    spec:
+      containers:
+        {{- include "taskflow.backend.container" . | nindent 8 }}
+  strategy:
+    {{- if eq .Values.backend.rolloutStrategy "blueGreen" }}
+    blueGreen:
+      activeService: taskflow-backend
+      previewService: taskflow-backend-preview
+      autoPromotionEnabled: false
+      scaleDownDelaySeconds: 30
+    {{- else }}
+    canary:
+      canaryService: taskflow-backend-canary
+      stableService: taskflow-backend
+      steps:
+        - setWeight: 10
+        {{- if .Values.monitoring.serviceMonitor.enabled }}
+        - analysis:
+            templateName: taskflow-success-rate
+            args:
+              - name: service-name
+                value: taskflow-backend-canary
+        {{- end }}
+        - pause: { duration: 60 }
+        - setWeight: 25
+        - pause: { duration: 60 }
+        - setWeight: 50
+        - pause: { duration: 120 }
+        - setWeight: 100
+      trafficRouting:
+        alb:
+          ingress: taskflow-backend-ingress
+          servicePort: {{ .Values.backend.service.port }}
+    {{- end }}

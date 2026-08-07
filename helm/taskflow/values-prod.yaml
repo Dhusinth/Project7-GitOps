@@ -1,0 +1,60 @@
+# Prod environment overrides. Merged on top of values.yaml by ArgoCD
+# (applications/taskflow-applicationset.yaml -> helm.valueFiles).
+# Goal: progressive delivery via canary, tighter resource floor. HTTP only
+# (no TLS/ACM) — this is a demo project without an owned domain.
+# NOTE: secrets.secretKey / secrets.postgresPassword are intentionally left
+# at the values.yaml placeholder here — in a real environment these must be
+# supplied out-of-band (sealed-secrets / External Secrets Operator / SOPS),
+# never committed in plaintext, even in an override file.
+
+backend:
+  # Updated manually (or by a promotion job) once a tag has been verified
+  # in dev — this is the deliberate gate between "deployed to dev" and
+  # "deployed to prod" that the Jenkinsfile alone doesn't cross.
+  image:
+    repository: dhusinth123/taskflow-backend
+    tag: "1.0.0"
+  replicaCount: 3
+  rolloutStrategy: canary
+  env:
+    APP_ENV: production
+    LOG_LEVEL: INFO
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+
+frontend:
+  image:
+    repository: dhusinth123/taskflow-frontend
+    tag: "1.0.0"
+  replicaCount: 3
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 6
+
+postgres:
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+  storage:
+    size: 20Gi
+
+redis:
+  persistence:
+    enabled: true
+    size: 2Gi
+
+migrationJob:
+  enabled: true
+  seedDemoData: false
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+    interval: 15s

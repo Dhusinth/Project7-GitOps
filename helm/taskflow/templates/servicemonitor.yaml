@@ -1,0 +1,19 @@
+{{- if .Values.monitoring.serviceMonitor.enabled }}
+# Requires the Prometheus Operator CRDs in-cluster (kube-prometheus-stack).
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: taskflow-backend
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    {{- include "taskflow.backend.selectorLabels" . | nindent 4 }}
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      {{- include "taskflow.backend.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.monitoring.serviceMonitor.interval }}
+{{- end }}
