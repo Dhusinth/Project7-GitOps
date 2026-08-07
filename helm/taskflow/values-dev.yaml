@@ -29,14 +29,20 @@ frontend:
   replicaCount: 1
   autoscaling:
     enabled: false
+    
 postgres:
   resources:
     requests:
       cpu: 50m
       memory: 128Mi
     limits:
-      cpu: 250m
+      cpu: 200m
       memory: 256Mi
+
+  storage:
+    size: 5Gi
+    storageClassName: gp2
+
 redis:
   persistence:
     enabled: false
