@@ -6,7 +6,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: taskflow-backend
-  namespace: {{ .Values.global.namespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "taskflow.backend.selectorLabels" . | nindent 4 }}
     {{- include "taskflow.labels" . | nindent 4 }}

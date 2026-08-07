@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: taskflow-migrate-{{ .Release.Revision }}
-  namespace: {{ .Values.global.namespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "taskflow.backend.selectorLabels" . | nindent 4 }}
   annotations:

@@ -11,7 +11,7 @@ backend:
   # be editing; useful mainly for `helm template` with no -f flags at all.
   image:
     repository: dhusinth123/taskflow-backend
-    tag: "1.0.0"
+    tag: "8167751"
     pullPolicy: IfNotPresent
   replicaCount: 2
 
@@ -62,7 +62,7 @@ frontend:
   # Fallback default only — see the same note on backend.image above.
   image:
     repository: dhusinth123/taskflow-frontend
-    tag: "1.0.0"
+    tag: "8167751"
     pullPolicy: IfNotPresent
   replicaCount: 2
 

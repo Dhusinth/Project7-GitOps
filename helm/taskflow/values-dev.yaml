@@ -12,7 +12,7 @@ backend:
   # self-contained record of what's actually running in dev.
   image:
     repository: dhusinth123/taskflow-backend
-    tag: 8167751
+    tag: "8167751"
   replicaCount: 1
   autoscaling:
     enabled: false
@@ -23,7 +23,7 @@ backend:
 frontend:
   image:
     repository: dhusinth123/taskflow-frontend
-    tag: 8167751
+    tag: "8167751"
   replicaCount: 1
   autoscaling:
     enabled: false

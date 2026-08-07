@@ -7,7 +7,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
   name: taskflow-success-rate
-  namespace: {{ .Values.global.namespace }}
+  namespace: {{ .Release.Namespace }}
   labels:
     {{- include "taskflow.labels" . | nindent 4 }}
 spec:
