@@ -26,6 +26,7 @@ frontend:
   autoscaling:
     enabled: false
 ingress:
+  enabled: false
   # No host — see values.yaml for why. Hit the ALB's own DNS name directly.
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
