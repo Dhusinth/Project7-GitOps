@@ -1,9 +1,7 @@
 # Dev environment overrides. Merged on top of values.yaml by ArgoCD
 # (applications/taskflow-applicationset.yaml -> helm.valueFiles).
-# Goal: cheap, fast-moving, auto-synced, no TLS. Progressive delivery
-# (Argo Rollouts) is now the only workload path in every environment, so
-# dev's canary rollout still walks through its pause steps like prod's —
-# expect a few minutes per rollout here too, not an instant redeploy.
+# Goal: cheap, fast-moving, auto-synced, no TLS. Plain Deployments — every
+# push here rolls out immediately, no canary/pause steps.
 
 backend:
   # Jenkinsfile updates this tag on every dev deploy (e.g. yq/sed replacing
@@ -12,7 +10,6 @@ backend:
   # self-contained record of what's actually running in dev.
   image:
     repository: dhusinth123/taskflow-backend
-
     tag: "2118772"
 
   replicaCount: 1
@@ -22,6 +19,7 @@ backend:
     APP_ENV: development
     LOG_LEVEL: DEBUG
     CORS_ORIGINS: "http://localhost:5173"
+
 frontend:
   image:
     repository: dhusinth123/taskflow-frontend
@@ -29,36 +27,18 @@ frontend:
   replicaCount: 1
   autoscaling:
     enabled: false
-    
-postgres:
-  resources:
-    requests:
-      cpu: 50m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
 
-  storage:
-    size: 5Gi
-    storageClassName: gp2
-
-redis:
-  persistence:
-    enabled: false
 ingress:
   # No host — see values.yaml for why. Hit the ALB's own DNS name directly.
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
-    alb.ingress.kubernetes.io/healthcheck-path: /health
-migrationJob:
-  enabled: true
-  seedDemoData: true
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+
 monitoring:
   serviceMonitor:
     enabled: false
+
 secrets:
   secretKey: "dev-only-not-secret"
-  postgresPassword: "dev-only-not-secret"

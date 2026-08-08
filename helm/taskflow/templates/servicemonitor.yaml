@@ -1,5 +1,10 @@
 {{- if .Values.monitoring.serviceMonitor.enabled }}
-# Requires the Prometheus Operator CRDs in-cluster (kube-prometheus-stack).
+# Requires the Prometheus Operator CRDs in-cluster (kube-prometheus-stack,
+# installed by applications/monitoring.yaml with Helm releaseName
+# "monitoring"). kube-prometheus-stack's Prometheus only picks up
+# ServiceMonitors labeled `release: <its own Helm release name>` by
+# default (serviceMonitorSelectorNilUsesHelmValues), so this label must
+# match that release name — not a hardcoded "prometheus".
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -7,7 +12,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "taskflow.backend.selectorLabels" . | nindent 4 }}
-    release: prometheus
+    release: monitoring
 spec:
   selector:
     matchLabels:

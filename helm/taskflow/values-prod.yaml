@@ -1,11 +1,11 @@
 # Prod environment overrides. Merged on top of values.yaml by ArgoCD
 # (applications/taskflow-applicationset.yaml -> helm.valueFiles).
-# Goal: progressive delivery via canary, tighter resource floor. HTTP only
-# (no TLS/ACM) — this is a demo project without an owned domain.
-# NOTE: secrets.secretKey / secrets.postgresPassword are intentionally left
-# at the values.yaml placeholder here — in a real environment these must be
-# supplied out-of-band (sealed-secrets / External Secrets Operator / SOPS),
-# never committed in plaintext, even in an override file.
+# Goal: more replicas, tighter resource floor. HTTP only (no TLS/ACM) —
+# this is a demo project without an owned domain.
+# NOTE: secrets.secretKey is intentionally left at the values.yaml
+# placeholder here — in a real environment it must be supplied out-of-band
+# (sealed-secrets / External Secrets Operator / SOPS), never committed in
+# plaintext, even in an override file.
 
 backend:
   # Updated manually (or by a promotion job) once a tag has been verified
@@ -14,47 +14,24 @@ backend:
   image:
     repository: dhusinth123/taskflow-backend
     tag: "8167751"
-  replicaCount: 3
-  rolloutStrategy: canary
+  replicaCount: 2
   env:
     APP_ENV: production
     LOG_LEVEL: INFO
   autoscaling:
     enabled: true
-    minReplicas: 3
-    maxReplicas: 10
+    minReplicas: 2
+    maxReplicas: 4
 
 frontend:
   image:
     repository: dhusinth123/taskflow-frontend
     tag: "8167751"
-  replicaCount: 3
+  replicaCount: 2
   autoscaling:
     enabled: true
-    minReplicas: 3
-    maxReplicas: 6
-
-postgres:
-  resources:
-    requests:
-      cpu: 250m
-      memory: 512Mi
-    limits:
-      cpu: 1000m
-      memory: 1Gi
-  storage:
-    size: 5Gi
-    storageClassName: gp2
-
-redis:
-  persistence:
-    enabled: true
-    size: 2Gi
-    storageClassName: gp2
-
-migrationJob:
-  enabled: true
-  seedDemoData: false
+    minReplicas: 2
+    maxReplicas: 4
 
 monitoring:
   serviceMonitor:

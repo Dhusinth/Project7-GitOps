@@ -1,6 +1,6 @@
 # Default values for the TaskFlow chart.
-# Override per-environment with -f values-staging.yaml / -f values-prod.yaml,
-# or via ArgoCD Application `helm.valueFiles` / `helm.parameters`.
+# Override per-environment with -f values-dev.yaml / -f values-prod.yaml,
+# or via the ArgoCD ApplicationSet's `helm.valueFiles`.
 
 global:
   namespace: taskflow
@@ -14,10 +14,6 @@ backend:
     tag: "8167751"
     pullPolicy: IfNotPresent
   replicaCount: 2
-
-  # Always deployed as an Argo Rollout (Argo Rollouts is installed
-  # cluster-wide, so there's no plain-Deployment fallback).
-  rolloutStrategy: canary   # canary | blueGreen
 
   service:
     port: 8000
@@ -66,8 +62,6 @@ frontend:
     pullPolicy: IfNotPresent
   replicaCount: 2
 
-  rolloutStrategy: canary   # canary | blueGreen
-
   service:
     port: 80
     targetPort: 8080
@@ -86,42 +80,6 @@ frontend:
     maxReplicas: 6
     targetCPUUtilizationPercentage: 70
 
-postgres:
-  # Set to false and point backend.env.DATABASE_URL at a managed instance
-  # (RDS/Cloud SQL/etc.) for real environments. Enabled here to demonstrate
-  # a stateful workload running in-cluster.
-  enabled: true
-  image: postgres:16-alpine
-  storage:
-    size: 5Gi
-    storageClassName: ""   # "" = cluster default StorageClass
-  resources:
-    requests:
-      cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
-  auth:
-    database: taskflow
-    username: taskflow
-    # password is provided via Secret — see templates/secret.yaml / --set-file
-
-redis:
-  enabled: true
-  image: redis:7-alpine
-  persistence:
-    enabled: true
-    size: 1Gi
-    storageClassName: ""
-  resources:
-    requests:
-      cpu: 50m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 128Mi
-
 ingress:
   enabled: true
   className: alb
@@ -135,11 +93,11 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
-    alb.ingress.kubernetes.io/healthcheck-path: /health
-
-migrationJob:
-  enabled: true
-  seedDemoData: true
+    # /healthz is the frontend's own nginx endpoint (see
+    # frontend/nginx.conf.template in the app repo) — the ALB only ever
+    # targets the frontend Service, so this must be a path nginx serves,
+    # not the backend's /health.
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
 
 monitoring:
   serviceMonitor:
@@ -150,4 +108,3 @@ secrets:
   # Overridden via --set or a sealed-secrets/external-secrets integration
   # in real GitOps flows. Never commit real values here.
   secretKey: "change-me-in-production"
-  postgresPassword: "change-me-in-production"

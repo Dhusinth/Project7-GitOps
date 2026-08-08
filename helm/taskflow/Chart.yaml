@@ -1,6 +1,6 @@
 apiVersion: v2
 name: taskflow
-description: Helm chart for the TaskFlow demo application (frontend, backend, Postgres, Redis) — deployed by Project 7's ArgoCD ApplicationSet
+description: Helm chart for the TaskFlow demo application (stateless React frontend + FastAPI backend, in-memory store) — deployed by Project 7's ArgoCD ApplicationSet
 type: application
 version: 0.1.0
 appVersion: "1.0.0"

@@ -22,19 +22,7 @@ app.kubernetes.io/name: taskflow-frontend
 app.kubernetes.io/component: frontend
 {{- end }}
 
-{{/* Postgres selector labels */}}
-{{- define "taskflow.postgres.selectorLabels" -}}
-app.kubernetes.io/name: taskflow-postgres
-app.kubernetes.io/component: database
-{{- end }}
-
-{{/* Redis selector labels */}}
-{{- define "taskflow.redis.selectorLabels" -}}
-app.kubernetes.io/name: taskflow-redis
-app.kubernetes.io/component: cache
-{{- end }}
-
-{{/* Shared frontend container spec, used by both Deployment and Argo Rollout */}}
+{{/* Shared frontend container spec */}}
 {{- define "taskflow.frontend.container" -}}
 - name: frontend
   image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
@@ -42,17 +30,25 @@ app.kubernetes.io/component: cache
   ports:
     - name: http
       containerPort: {{ .Values.frontend.service.targetPort }}
+  env:
+    # Consumed by frontend/docker-entrypoint.sh to template nginx's `/api/`
+    # reverse-proxy target. Must match the backend Service name + port
+    # below (taskflow-backend / backend.service.port) — the image's own
+    # default already matches this, but it's set explicitly here so the
+    # chart is the source of truth, not an assumption baked into the image.
+    - name: BACKEND_UPSTREAM
+      value: "taskflow-backend:{{ .Values.backend.service.port }}"
   resources:
     {{- toYaml .Values.frontend.resources | nindent 4 }}
   livenessProbe:
     httpGet:
-      path: /
+      path: /healthz
       port: http
     initialDelaySeconds: 5
     periodSeconds: 10
   readinessProbe:
     httpGet:
-      path: /
+      path: /healthz
       port: http
     initialDelaySeconds: 5
     periodSeconds: 10
@@ -65,7 +61,7 @@ app.kubernetes.io/component: cache
       drop: ["ALL"]
 {{- end }}
 
-{{/* Shared backend container spec, used by both Deployment and Argo Rollout */}}
+{{/* Shared backend container spec */}}
 {{- define "taskflow.backend.container" -}}
 - name: backend
   image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
@@ -77,18 +73,11 @@ app.kubernetes.io/component: cache
     - configMapRef:
         name: taskflow-backend-config
   env:
-    - name: POSTGRES_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: taskflow-secrets
-          key: POSTGRES_PASSWORD
     - name: SECRET_KEY
       valueFrom:
         secretKeyRef:
           name: taskflow-secrets
           key: SECRET_KEY
-    - name: DATABASE_URL
-      value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):5432/$(POSTGRES_DB)"
   resources:
     {{- toYaml .Values.backend.resources | nindent 4 }}
   livenessProbe:
