@@ -13,7 +13,7 @@ backend:
   # "deployed to prod" that the Jenkinsfile alone doesn't cross.
   image:
     repository: dhusinth123/taskflow-backend
-    tag: "8167751"
+    tag: "6fd2d88"
   replicaCount: 2
   env:
     APP_ENV: production
@@ -26,7 +26,7 @@ backend:
 frontend:
   image:
     repository: dhusinth123/taskflow-frontend
-    tag: "8167751"
+    tag: "6fd2d88"
   replicaCount: 2
   autoscaling:
     enabled: true
